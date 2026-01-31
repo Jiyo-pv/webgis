@@ -213,23 +213,24 @@ map.on('click', function (e) {
   if (currentMode === "temperature" && activeTempData.length) {
 
     let p = activeTempData.reduce((a, b) =>
-      ((a[0]-e.latlng.lat)**2 + (a[1]-e.latlng.lng)**2) <
-      ((b[0]-e.latlng.lat)**2 + (b[1]-e.latlng.lng)**2) ? a : b
+      ((a[0] - e.latlng.lat) ** 2 + (a[1] - e.latlng.lng) ** 2) <
+        ((b[0] - e.latlng.lat) ** 2 + (b[1] - e.latlng.lng) ** 2) ? a : b
     );
 
     let temp = (26 + p[2] * 12).toFixed(1);
 
     let risk =
       temp < 30 ? ["Low", "Comfortable temperature range."] :
-      temp < 33 ? ["Moderate", "Mild heat stress possible."] :
-      temp < 36 ? ["High", "High heat stress risk."] :
-                  ["Very High", "Severe heat stress conditions."];
+        temp < 33 ? ["Moderate", "Mild heat stress possible."] :
+          temp < 36 ? ["High", "High heat stress risk."] :
+            ["Very High", "Severe heat stress conditions."];
 
     document.getElementById("info-location").innerText =
       `${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`;
     document.getElementById("info-temp").innerText = temp + " °C";
     document.getElementById("info-risk").innerText = risk[0];
     document.getElementById("info-reason").innerText = risk[1];
+    
   }
 
   // TRAFFIC
@@ -247,8 +248,8 @@ map.on('click', function (e) {
 
     let level =
       intensity > 0.8 ? ["High", "Near a major congestion hotspot."] :
-      intensity > 0.5 ? ["Medium", "Moderate traffic influence."] :
-                        ["Low", "Low traffic activity area."];
+        intensity > 0.5 ? ["Medium", "Moderate traffic influence."] :
+          ["Low", "Low traffic activity area."];
 
     document.getElementById("info-location").innerText =
       `${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`;
