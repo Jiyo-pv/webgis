@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Ernakulam Urban Risk Dashboard</title>
+  <meta charset="utf-8" />
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: #f4f6f8;
+      color: #111827;
+    }
+
+    /* Header */
+    .header {
+      height: 56px;
+      background: linear-gradient(90deg, #0f172a, #1e293b);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .header h1 {
+      font-size: 17px;
+      margin: 0;
+      font-weight: 700;
+    }
+
+    .header span {
+      font-size: 13px;
+      opacity: 0.8;
+      margin-left: 10px;
+    }
+
+    /* Layout */
+    .container {
+      display: flex;
+      height: calc(100vh - 56px);
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 300px;
+      background: #ffffff;
+      padding: 20px;
+      box-shadow: 2px 0 12px rgba(0,0,0,0.08);
+    }
+
+    .card {
+      background: #f9fafb;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 15px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .card h2 {
+      font-size: 14px;
+      margin: 0 0 10px 0;
+      font-weight: 600;
+    }
+
+    .info-row {
+      margin-bottom: 10px;
+      font-size: 13px;
+    }
+
+    .info-label {
+      color: #6b7280;
+      font-size: 12px;
+    }
+
+    .info-value {
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    /* Risk badge */
+    .risk-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .risk-low { background: #dcfce7; color: #166534; }
+    .risk-moderate { background: #fef9c3; color: #854d0e; }
+    .risk-high { background: #fee2e2; color: #991b1b; }
+    .risk-very-high { background: #fecaca; color: #7f1d1d; }
+
+    /* Map */
+    #map {
+      flex: 1;
+    }
+
+    /* Selectors */
+    .control {
+      position: absolute;
+      right: 20px;
+      z-index: 1200;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      background: #ffffff;
+      font-size: 13px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    #modeSelect { top: 72px; }
+    #timeSelect { top: 118px; }
+
+    .note {
+      font-size: 11px;
+      color: #6b7280;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <h1>Ernakulam Urban Risk Dashboard</h1>
+  <span>Heat & Traffic risk insights (ERA5 + proxies)</span>
+</div>
+
+<div class="container">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <div class="card">
+      <h2>Area Insights</h2>
+
+      <div class="info-row">
+        <div class="info-label">Location</div>
+        <div class="info-value" id="info-location">Click on map</div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-label">Temperature</div>
+        <div class="info-value" id="info-temp">—</div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-label">Risk Level</div>
+        <div class="info-value">
+          <span id="info-risk" class="risk-badge">—</span>
+        </div>
+      </div>
+
+      <div class="info-row" style="margin-top:8px;">
+        <div class="info-label">Risk key</div>
+        <div class="info-value" style="font-size:12px;">
+          <span class="risk-badge risk-low" style="margin-right:6px">Low</span>
+          <span class="risk-badge risk-moderate" style="margin-right:6px">Moderate</span>
+          <span class="risk-badge risk-high" style="margin-right:6px">High</span>
+          <span class="risk-badge risk-very-high">Very High</span>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-label">Why this area?</div>
+        <div class="info-value" id="info-reason">—</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Methodology</h2>
+      <div class="note">
+        Temperature surfaces derived from ERA5 reanalysis data and
+        spatially interpolated. Traffic layer uses congestion proxy
+        points to represent activity hotspots.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MAP -->
+  <div id="map"></div>
+
+</div>
+
+<!-- CONTROLS -->
+<select id="modeSelect" class="control">
+  <option value="temperature" selected>🌡 Temperature</option>
+  <option value="traffic">🚦 Traffic</option>
+</select>
+
+<select id="timeSelect" class="control">
+  <option value="morning">Morning</option>
+  <option value="afternoon" selected>Afternoon</option>
+</select>
+
+<!-- Interactive sliders -->
+<div id="radiusControl" class="control" style="top:160px;">
+  <label style="font-size:12px; display:flex; gap:8px; align-items:center;">Radius
+    <input id="radiusRange" type="range" min="8" max="40" value="25" style="width:120px;">
+  </label>
+</div>
+
+<div id="opacityControl" class="control" style="top:202px;">
+  <label style="font-size:12px; display:flex; gap:8px; align-items:center;">Opacity
+    <input id="opacityRange" type="range" min="10" max="100" value="50" style="width:120px;">
+  </label>
+</div>
+
+<!-- Legend -->
+<div id="legend" class="control" style="right:20px; bottom:20px; top:auto;">
+  <div style="font-weight:600; margin-bottom:6px; font-size:13px;">Temperature legend</div>
+  <div id="legendBar" style="height:12px; border-radius:6px; background: linear-gradient(90deg, #313695 0%, #74add1 25%, #fdae61 55%, #f97316 80%, #d73027 100%);"></div>
+  <div style="display:flex; justify-content:space-between; font-size:12px; margin-top:6px;">
+    <span id="legendMin">26°C</span><span id="legendMid">32°C</span><span id="legendMax">38°C</span>
+  </div>
+  <div style="font-size:11px; color:#6b7280; margin-top:8px;">Click map to inspect point; use sliders to tune display.</div>
+</div>
+
+<!-- Scripts -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+<script src="/static/map.js"></script>
+
+</body>
+</html>
